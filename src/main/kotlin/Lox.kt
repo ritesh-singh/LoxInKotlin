@@ -7,7 +7,7 @@ import kotlin.system.exitProcess
 
 object Lox {
 
-    var hadError = false
+    private var hadError = false
 
     fun init(args: Array<String>) {
         when {

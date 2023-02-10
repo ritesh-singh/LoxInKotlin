@@ -5,6 +5,6 @@ data class Token(
     val line: Int
 ) {
     override fun toString(): String {
-        return "$type $lexeme $literal"
+        return "type = $type lexeme = $lexeme literal = $literal line = $line"
     }
 }
