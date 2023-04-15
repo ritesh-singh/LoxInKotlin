@@ -1,6 +1,6 @@
+package lox
 
-
-// Scanner job is to take source and convert them to tokens
+// lox.Scanner job is to take source and convert them to tokens
 class Scanner(private val source: String) {
     private val tokens = mutableListOf<Token>()
 
