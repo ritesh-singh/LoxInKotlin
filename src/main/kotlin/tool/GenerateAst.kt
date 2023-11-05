@@ -13,10 +13,10 @@ class GenerateAst {
         val outputDir = args[0]
         defineAst(
             outputDir, "Expr", listOf(
-                "Binary   : Expr left, Token operator, Expr right",
-                "Grouping : Expr expression",
-                "Literal  : Object value",
-                "Unary    : Token operator, Expr right"
+                "Binary   : val left: Expr, val operator: Token, val right: Expr",
+                "Grouping : val expression: Expr",
+                "Literal  : val value: Any",
+                "Unary    : val operator: Token, val right: Expr"
             )
         )
     }
@@ -25,25 +25,25 @@ class GenerateAst {
     private fun defineAst(
         outputDir: String, baseName: String, types: List<String>
     ) {
-        val path = "$outputDir/$baseName.java"
+        val path = "$outputDir/$baseName.kt"
         val writer = PrintWriter(path, "UTF-8")
-        writer.println("package lox;")
-        writer.println()
-        writer.println("import java.util.List;")
+        writer.println("package lox")
         writer.println()
         writer.println("abstract class $baseName {")
 
+        writer.println()
         defineVisitor(writer, baseName, types)
+        writer.println()
 
         // The AST classes.
         for (type in types) {
             val className = type.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].trim { it <= ' ' }
-            val fields = type.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].trim { it <= ' ' }
+            val fields = type.substringAfter(":").trim()
             defineType(writer, baseName, className, fields)
         }
 
-        writer.println();
-        writer.println("  abstract <R> R accept(Visitor<R> visitor);");
+        writer.println()
+        writer.println("  abstract fun <R> accept(visitor: Visitor<R>): R")
 
         writer.println("}")
         writer.close()
@@ -56,8 +56,7 @@ class GenerateAst {
         for (type: String in types) {
             val typeName = type.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].trim { it <= ' ' }
             writer.println(
-                "    R visit" + typeName + baseName + "(" +
-                        typeName + " " + baseName.lowercase(Locale.getDefault()) + ");"
+                "    fun visit$typeName$baseName(${baseName.lowercase(Locale.getDefault())}: $typeName): R"
             )
         }
         writer.println("  }")
@@ -68,34 +67,14 @@ class GenerateAst {
         className: String, fieldList: String
     ) {
         writer.println(
-            "  static class " + className + " extends " +
-                    baseName + " {"
+            "  class $className($fieldList) : $baseName() {"
         )
-
-        // Constructor.
-        writer.println("    $className($fieldList) {")
-
-        // Store parameters in fields.
-        val fields = fieldList.split(", ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        for (field: String in fields) {
-            val name = field.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1]
-            writer.println("      this.$name = $name;")
-        }
-        writer.println("    }")
-
-        // Visitor pattern.
-        writer.println();
-        writer.println("    @Override");
-        writer.println("    <R> R accept(Visitor<R> visitor) {");
-        writer.println("      return visitor.visit" +
-                className + baseName + "(this);");
+        writer.println("    override fun <R> accept(visitor: Visitor<R>): R {")
+        writer.println("      return visitor.visit$className$baseName(this)")
         writer.println("    }");
 
-        // Fields.
-        writer.println()
-        for (field: String in fields) {
-            writer.println("    final $field;")
-        }
+
         writer.println("  }")
+        writer.println()
     }
 }
