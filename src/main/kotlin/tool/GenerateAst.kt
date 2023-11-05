@@ -1,6 +1,7 @@
 package tool
 
 import java.io.PrintWriter
+import java.util.*
 import kotlin.system.exitProcess
 
 class GenerateAst {
@@ -32,6 +33,8 @@ class GenerateAst {
         writer.println()
         writer.println("abstract class $baseName {")
 
+        defineVisitor(writer, baseName, types)
+
         // The AST classes.
         for (type in types) {
             val className = type.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].trim { it <= ' ' }
@@ -39,8 +42,25 @@ class GenerateAst {
             defineType(writer, baseName, className, fields)
         }
 
+        writer.println();
+        writer.println("  abstract <R> R accept(Visitor<R> visitor);");
+
         writer.println("}")
         writer.close()
+    }
+
+    private fun defineVisitor(
+        writer: PrintWriter, baseName: String, types: List<String>
+    ) {
+        writer.println("  interface Visitor<R> {")
+        for (type: String in types) {
+            val typeName = type.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].trim { it <= ' ' }
+            writer.println(
+                "    R visit" + typeName + baseName + "(" +
+                        typeName + " " + baseName.lowercase(Locale.getDefault()) + ");"
+            )
+        }
+        writer.println("  }")
     }
 
     private fun defineType(
@@ -62,6 +82,14 @@ class GenerateAst {
             writer.println("      this.$name = $name;")
         }
         writer.println("    }")
+
+        // Visitor pattern.
+        writer.println();
+        writer.println("    @Override");
+        writer.println("    <R> R accept(Visitor<R> visitor) {");
+        writer.println("      return visitor.visit" +
+                className + baseName + "(this);");
+        writer.println("    }");
 
         // Fields.
         writer.println()
