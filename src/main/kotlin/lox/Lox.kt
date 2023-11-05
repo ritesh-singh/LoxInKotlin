@@ -45,10 +45,13 @@ object Lox {
         val scanner = Scanner(source)
         val tokens: List<Token> = scanner.scanTokens()
 
-        // For now, just print the tokens.
-        for (token in tokens) {
-            println(token)
-        }
+        val parser = Parser(tokens)
+        val expression = parser.parse()
+
+        // Stop if there was a syntax error.
+        if (hadError) return
+
+        println(AstPrinter().print(expression!!))
     }
 
     fun error(line: Int, message: String) {
@@ -62,6 +65,14 @@ object Lox {
     ) {
         System.err.println("[line $line] Error$where: $message")
         hadError = true
+    }
+
+    fun error(token: Token, message: String) {
+        if (token.type === TokenType.EOF) {
+            report(token.line!!, " at end", message!!)
+        } else {
+            report(token.line!!, " at '" + token.lexeme + "'", message!!)
+        }
     }
 
 }

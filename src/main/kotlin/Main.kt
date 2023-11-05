@@ -1,15 +1,11 @@
-import lox.AstPrinter
-import lox.Expr
+import lox.*
 import lox.Expr.*
-import lox.Token
-import lox.TokenType
 
 
 fun main(args: Array<String>) {
-
-//    Lox.init(args)
+    Lox.init(args)
 //    GenerateAst().init(arrayOf("src/main/kotlin/lox"))
-    testAstPrinter()
+//    testAstPrinter()
 }
 
 private fun testAstPrinter() {
